@@ -26,108 +26,132 @@ Render the moon in OpenGL.
 ### 1.2 简单球面的生成
 
 简单球面是月球模型的骨架。由空间解析几何的知识可知，在空间直角坐标系下，球面的一般方程为：
-$$
+
+```math
 (x-a)^2 + (y-b)^2 + (z-c)^2 = r^2
-$$
-其中$x, y, z$是球面上点的坐标，$a, b, c$是球心的坐标，$r$是球的半径。由球面的一般方程生成球面顶点坐标涉及开根运算，每个坐标分量的确定需要先确定另外两个坐标分量，同时也不方便计算球面上顶点的切向量，这里使用更合适的球面的参数方程来生成球面顶点坐标：
-$$
+```
+
+其中 $x, y, z$ 是球面上点的坐标， $a, b, c$ 是球心的坐标， $r$ 是球的半径。由球面的一般方程生成球面顶点坐标涉及开根运算，每个坐标分量的确定需要先确定另外两个坐标分量，同时也不方便计算球面上顶点的切向量，这里使用更合适的球面的参数方程来生成球面顶点坐标：
+
+```math
 \left\{\begin{array}{ccccc}
 x &= &a &+ &r\sin\phi\cos\theta \\
 y &= &b &+ &r\cos\phi \\
 z &= &c &- &r\sin\phi\sin\theta
 \end{array}\right.
-$$
-其中$x, y, z$是球面上点的坐标，$a, b, c$是球心的坐标，$r$是球的半径。$\phi \in [0, \pi]$，方向为从$y$轴负向逆时针旋转到$y$轴正向。$\theta \in [0, 2\pi]$，方向为从$x$轴正向出发，逆时针旋转回到$x$轴正向。为了实现的方便，令球心为原点，则：
-$$
+```
+
+其中 $x, y, z$ 是球面上点的坐标， $a, b, c$ 是球心的坐标， $r$ 是球的半径。 $\phi \in [0, \pi]$ ，方向为从 $y$ 轴负向逆时针旋转到 $y$ 轴正向。 $\theta \in [0, 2\pi]$ ，方向为从 $x$ 轴正向出发，逆时针旋转回到 $x$ 轴正向。为了实现的方便，令球心为原点，则：
+
+```math
 \left\{\begin{array}{ccc}
 x &= &r\sin\phi\cos\theta \\
 y &= &r\cos\phi \\
 z &= &-r\sin\phi\sin\theta
 \end{array}\right.
-$$
-作变量替换，令$\phi = \pi v, \theta = 2\pi u, u \in [0, 1], v \in [0, 1]$，则：
-$$
+```
+
+作变量替换，令 $\phi = \pi v, \theta = 2\pi u, u \in [0, 1], v \in [0, 1]$ ，则：
+
+```math
 \left\{\begin{array}{ccc}
 x &= &r\sin(\pi v)\cos(2\pi u) \\
 y &= &r\cos(\pi v) \\
 z &= &-r\sin(\pi v)\sin(2\pi u)
 \end{array}\right.
-$$
-通过均匀地采样变量$u$和变量$v$，可以生成一系列球面上的点，同时变量$u$和变量$v$可以作为对应球面顶点的纹理坐标。
+```
+
+通过均匀地采样变量 $u$ 和变量 $v$ ，可以生成一系列球面上的点，同时变量 $u$ 和变量 $v$ 可以作为对应球面顶点的纹理坐标。
 
 ### 1.3 球面顶点法向量的计算
 
 由于球心在原点的球面上某一点的法向量与该点的坐标相同，将该点的坐标单位化即可得到单位法向量。但是为了方便在应用位移贴图之后重新计算法向量，这里采用另一种方式计算球面上某一点的法向量。
 
-由微积分的知识可知，过曲面上一点，且在曲面上的任意曲线在该点处的切线处于同一平面上，该平面称为曲面在该点的切平面，切平面的法向量即为曲面上该点的法向量。对于球面参数方程（4），若将变量$v$当作常数，则参数方程（4）表示球面上关于变量$u$的一条参数曲线，曲线在点$(x, y, z)$处的切向量为：
-$$
+由微积分的知识可知，过曲面上一点，且在曲面上的任意曲线在该点处的切线处于同一平面上，该平面称为曲面在该点的切平面，切平面的法向量即为曲面上该点的法向量。对于球面参数方程（4），若将变量 $v$ 当作常数，则参数方程（4）表示球面上关于变量 $u$ 的一条参数曲线，曲线在点 $(x, y, z)$ 处的切向量为：
+
+```math
 \left\{\begin{array}{ccccc}
 u_x &= &\frac{\partial x}{\partial u} &= &-2\pi r\sin(\pi v)\sin(2\pi u) \\
 u_y &= &\frac{\partial y}{\partial u} &= &0 \\
 u_z &= &\frac{\partial z}{\partial u} &= &-2\pi r\sin(\pi v)\cos(2\pi u)
 \end{array}\right.
-$$
-其中$u_x, u_y, u_z$分别是切向量的三个分量。同理，若将变量$u$当作常数，则参数方程（4）表示球面上关于变量$v$的一条参数曲线，曲线在点$(x, y, z)$处的切向量为：
-$$
+```
+
+其中 $u_x, u_y, u_z$ 分别是切向量的三个分量。同理，若将变量 $u$ 当作常数，则参数方程（4）表示球面上关于变量 $v$ 的一条参数曲线，曲线在点 $(x, y, z)$ 处的切向量为：
+
+```math
 \left\{\begin{array}{ccccc}
 v_x &= &\frac{\partial x}{\partial v} &= &\pi r\cos(\pi v)\cos(2\pi u) \\
 v_y &= &\frac{\partial y}{\partial v} &= &-\pi r\sin(\pi v) \\
 v_z &= &\frac{\partial z}{\partial v} &= &-\pi r\cos(\pi v)\sin(2\pi u)
 \end{array}\right.
-$$
-其中$v_x, v_y, v_z$分别是切向量的三个分量。分别求出两条参数曲线的在球面上某一点的切向量之后，作向量积$[u_x, u_y, u_z]^T \times [v_x, v_y, v_z]^T$即得该点的法向量，将法向量单位化后即得单位法向量。
+```
+
+其中 $v_x, v_y, v_z$ 分别是切向量的三个分量。分别求出两条参数曲线的在球面上某一点的切向量之后，作向量积 $[u_x, u_y, u_z]^T \times [v_x, v_y, v_z]^T$ 即得该点的法向量，将法向量单位化后即得单位法向量。
 
 ### 1.4 应用位移贴图之后顶点法向量的计算
 
 设简单球面的参数方程为：
-$$
+
+```math
 \left\{\begin{array}{ccc}
 x &= &x(u, v) \\
 y &= &y(u, v) \\
 z &= &z(u, v)
 \end{array}\right.
-$$
-其中$x(u, v), y(u, v), z(u, v)$是关于变量$u$和变量$v$的二元函数且$u \in [0, 1], v \in [0, 1]$。设位移贴图由二元函数$d = g(u, v)$定义。添加位移贴图之前，球面上的点的坐标由球面的参数方程确定。添加位移贴图后，球面上的点坐标变为原球面坐标加上沿着该点的单位法向量的$g(u, v)$倍的和，即：
-$$
+```
+
+其中 $x(u, v), y(u, v), z(u, v)$ 是关于变量 $u$ 和变量 $v$ 的二元函数且 $u \in [0, 1], v \in [0, 1]$ 。设位移贴图由二元函数 $d = g(u, v)$ 定义。添加位移贴图之前，球面上的点的坐标由球面的参数方程确定。添加位移贴图后，球面上的点坐标变为原球面坐标加上沿着该点的单位法向量的 $g(u, v)$ 倍的和，即：
+
+```math
 \left\{\begin{array}{ccccc}
 x &= &x(u, v) &+ &n_x \cdot g(u, v) \\
 y &= &y(u, v) &+ &n_y \cdot g(u, v) \\
 z &= &z(u, v) &+ &n_z \cdot g(u, v)
 \end{array}\right.
-$$
-其中$n_x, n_y, n_z$分别是简单球面上某一点的单位法向量的三个分量。由于：
-$$
+```
+
+其中 $n_x, n_y, n_z$ 分别是简单球面上某一点的单位法向量的三个分量。由于：
+
+```math
 \left\{\begin{array}{ccc}
 n_x &= &\frac{x(u, v)}{r} \\
 n_y &= &\frac{y(u, v)}{r} \\
 n_z &= &\frac{z(u, v)}{r}
 \end{array}\right.
-$$
+```
+
 则：
-$$
+
+```math
 \left\{\begin{array}{ccccc}
 x &= &x(u, v) &+ &\frac{x(u, v)}{r} \cdot g(u, v) \\
 y &= &y(u, v) &+ &\frac{y(u, v)}{r} \cdot g(u, v) \\
 z &= &z(u, v) &+ &\frac{z(u, v)}{r} \cdot g(u, v)
 \end{array}\right.
-$$
-从而关于变量$u$的参数曲线在点$(x, y, z)$处的切向量为：
-$$
+```
+
+从而关于变量 $u$ 的参数曲线在点 $(x, y, z)$ 处的切向量为：
+
+```math
 \left\{\begin{array}{ccc}
 u_x &= &\frac{\partial x(u, v)}{\partial u} + \frac{1}{r} \cdot \frac{\partial x(u, v)}{\partial u} \cdot g(u, v) + \frac{1}{r} \cdot x(u, v) \cdot \frac{\partial g(u, v)}{\partial u} \\
 u_y &= &\frac{\partial y(u, v)}{\partial u} + \frac{1}{r} \cdot \frac{\partial y(u, v)}{\partial u} \cdot g(u, v) + \frac{1}{r} \cdot y(u, v) \cdot \frac{\partial g(u, v)}{\partial u} \\
 u_z &= &\frac{\partial z(u, v)}{\partial u} + \frac{1}{r} \cdot \frac{\partial z(u, v)}{\partial u} \cdot g(u, v) + \frac{1}{r} \cdot z(u, v) \cdot \frac{\partial g(u, v)}{\partial u}
 \end{array}\right.
-$$
-同理可得关于变量$v$的参数曲线在点$(x, y, z)$处的切向量为：
-$$
+```
+
+同理可得关于变量 $v$ 的参数曲线在点 $(x, y, z)$ 处的切向量为：
+
+```math
 \left\{\begin{array}{ccc}
 v_x &= &\frac{\partial x(u, v)}{\partial v} + \frac{1}{r} \cdot \frac{\partial x(u, v)}{\partial v} \cdot g(u, v) + \frac{1}{r} \cdot x(u, v) \cdot \frac{\partial g(u, v)}{\partial v} \\
 v_y &= &\frac{\partial y(u, v)}{\partial v} + \frac{1}{r} \cdot \frac{\partial y(u, v)}{\partial v} \cdot g(u, v) + \frac{1}{r} \cdot y(u, v) \cdot \frac{\partial g(u, v)}{\partial v} \\
 v_z &= &\frac{\partial z(u, v)}{\partial v} + \frac{1}{r} \cdot \frac{\partial z(u, v)}{\partial v} \cdot g(u, v) + \frac{1}{r} \cdot z(u, v) \cdot \frac{\partial g(u, v)}{\partial v}
 \end{array}\right.
-$$
-根据公式(11)和公式（12）分别求出两条参数曲线在球面上某一点的切向量之后，作向量积$[u_x, u_y, u_z]^T \times [v_x, v_y, v_z]^T$即得该点的法向量，将法向量单位化后即得单位法向量
+```
+
+根据公式(11)和公式（12）分别求出两条参数曲线在球面上某一点的切向量之后，作向量积 $[u_x, u_y, u_z]^T \times [v_x, v_y, v_z]^T$ 即得该点的法向量，将法向量单位化后即得单位法向量
 
 ### 1.5 渲染程序运行流程
 
